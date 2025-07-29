@@ -1,29 +1,78 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Live-Musikwünsche</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap');
+
     body {
-      font-family: Arial, sans-serif;
-      background: #000;
+      margin: 0;
+      background-color: #000;
       color: #fff;
-      padding: 2rem;
+      font-family: 'Montserrat', sans-serif;
+      padding: 3rem 4rem;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
     }
     h1 {
+      font-size: 4rem;
+      margin-bottom: 2rem;
       text-align: center;
-      font-size: 2.5rem;
+      user-select: none;
+      text-shadow: 0 0 10px #00ffffaa;
+    }
+    #wunschListe {
+      width: 90vw;
+      max-width: 1200px;
+      flex-grow: 1;
+      overflow-y: auto;
+      padding-right: 1rem;
+      scrollbar-width: thin;
+      scrollbar-color: #00ffff55 transparent;
+    }
+    #wunschListe::-webkit-scrollbar {
+      width: 8px;
+    }
+    #wunschListe::-webkit-scrollbar-thumb {
+      background: #00ffff55;
+      border-radius: 4px;
     }
     .song {
-      background: #222;
+      background: #111;
       margin: 1rem 0;
-      padding: 1rem;
-      border-radius: 12px;
-      box-shadow: 0 0 10px #444;
-      font-size: 1.2rem;
+      padding: 1.5rem 2rem;
+      border-radius: 16px;
+      box-shadow: 0 0 15px #00ffff88;
+      font-size: 2.2rem;
+      opacity: 0;
+      animation: fadeIn 1s forwards;
+      user-select: none;
     }
     .song strong {
+      font-size: 2.8rem;
+      display: block;
+      margin-bottom: 0.3rem;
+      color: #00ffff;
+    }
+    .song em {
+      font-style: normal;
+      font-size: 2rem;
+      color: #ccc;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .song small {
       font-size: 1.4rem;
+      color: #666;
+      user-select: text;
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; }
     }
   </style>
 </head>
@@ -34,7 +83,7 @@
   <script>
     async function ladeWuensche() {
       const sheetId = "1fDn-x08SRqSKojZMaQui3-8-Uxs6MoaG3dgTTMtjdJs";
-      const sheetName = "Formularantworten 1"; // Name deines Tabellenblatts
+      const sheetName = "Formularantworten 1";
       const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
 
       try {
@@ -46,22 +95,29 @@
         const container = document.getElementById("wunschListe");
         container.innerHTML = "";
 
-        rows.slice().reverse().forEach(row => {
-          const zeit = row.c[0]?.f || "";             // Zeitstempel (Spalte A)
-          const titel = row.c[3]?.v || "🎵 unbekannter Titel"; // Titel (Spalte D)
-          const kuenstler = row.c[4]?.v || "👤 unbekannter Künstler"; // Interpret (Spalte E)
+        // Nur die letzten 8 Wünsche anzeigen (kannst du anpassen)
+        const maxSongs = 8;
+        const toShow = rows.slice(-maxSongs).reverse();
+
+        toShow.forEach((row, i) => {
+          const zeit = row.c[0]?.f || "";
+          const titel = row.c[3]?.v || "🎵 unbekannter Titel";
+          const kuenstler = row.c[4]?.v || "👤 unbekannter Künstler";
 
           const div = document.createElement("div");
           div.className = "song";
+          // Verzögerung der Animation, damit sie nacheinander einblenden
+          div.style.animationDelay = `${i * 0.3}s`;
           div.innerHTML = `
-            <strong>${titel}</strong><br>
-            <em>${kuenstler}</em><br>
+            <strong>${titel}</strong>
+            <em>${kuenstler}</em>
             <small>${zeit}</small>
           `;
           container.appendChild(div);
         });
       } catch (err) {
-        document.getElementById("wunschListe").innerHTML = "Fehler beim Laden.";
+        const container = document.getElementById("wunschListe");
+        container.innerHTML = "Fehler beim Laden.";
         console.error("Fehler beim Laden der Tabelle:", err);
       }
     }
