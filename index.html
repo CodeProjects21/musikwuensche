@@ -1,129 +1,323 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <title>Live-Musikwünsche</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap');
+<meta charset="UTF-8" />
+<title>Live-Musikwünsche</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap');
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: 'Montserrat', sans-serif;
+    background-color: #000;
+    color: #fff;
+    overflow: hidden;
+  }
+  body {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+    padding: 2rem;
+  }
+  h1 {
+    font-size: 3rem;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 2rem;
+    user-select: none;
+    text-shadow: 0 0 10px #00ffffaa;
+  }
 
-    body {
-      margin: 0;
-      background-color: #000;
-      color: #fff;
-      font-family: 'Montserrat', sans-serif;
-      padding: 3rem 4rem;
-      overflow: hidden;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-    }
-    h1 {
-      font-size: 4rem;
-      margin-bottom: 2rem;
-      text-align: center;
-      user-select: none;
-      text-shadow: 0 0 10px #00ffffaa;
-    }
-    #wunschListe {
-      width: 90vw;
-      max-width: 1200px;
-      flex-grow: 1;
-      overflow-y: auto;
-      padding-right: 1rem;
-      scrollbar-width: thin;
-      scrollbar-color: #00ffff55 transparent;
-    }
-    #wunschListe::-webkit-scrollbar {
-      width: 8px;
-    }
-    #wunschListe::-webkit-scrollbar-thumb {
-      background: #00ffff55;
-      border-radius: 4px;
-    }
-    .song {
-      background: #111;
-      margin: 1rem 0;
-      padding: 1.5rem 2rem;
-      border-radius: 16px;
-      box-shadow: 0 0 15px #00ffff88;
-      font-size: 2.2rem;
-      opacity: 0;
-      animation: fadeIn 1s forwards;
-      user-select: none;
-    }
-    .song strong {
-      font-size: 2.8rem;
-      display: block;
-      margin-bottom: 0.3rem;
-      color: #00ffff;
-    }
-    .song em {
-      font-style: normal;
-      font-size: 2rem;
-      color: #ccc;
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-    .song small {
-      font-size: 1.4rem;
-      color: #666;
-      user-select: text;
-    }
-    @keyframes fadeIn {
-      to { opacity: 1; }
-    }
-  </style>
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #wunschListe {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: #00ffff55 transparent;
+  }
+  #wunschListe::-webkit-scrollbar {
+    width: 8px;
+  }
+  #wunschListe::-webkit-scrollbar-thumb {
+    background: #00ffff55;
+    border-radius: 4px;
+  }
+
+  .song {
+    position: relative;
+    background: #111;
+    margin: 1rem 0;
+    padding: 1.5rem 2rem;
+    border-radius: 16px;
+    box-shadow: 0 0 15px #00ffff88;
+    font-size: 2.2rem;
+    opacity: 0;
+    animation: fadeIn 0.8s forwards;
+    user-select: none;
+  }
+  .song strong {
+    font-size: 2.8rem;
+    display: block;
+    margin-bottom: 0.3rem;
+    color: #00ffff;
+  }
+  .song em {
+    font-style: normal;
+    font-size: 2rem;
+    color: #ccc;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .song small {
+    font-size: 1.4rem;
+    color: #666;
+    user-select: text;
+  }
+
+  /* X-Button */
+  .btn-remove {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    background: #ff0044;
+    border: none;
+    border-radius: 50%;
+    width: 2.8rem;
+    height: 2.8rem;
+    color: white;
+    font-weight: bold;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+    user-select: none;
+  }
+  .btn-remove:hover {
+    opacity: 1;
+  }
+
+  /* Sidebar */
+  #sidebar {
+    width: 360px;
+    margin-left: 3rem;
+    border-left: 2px solid #00ffff55;
+    padding-left: 2rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+  #sidebar h2 {
+    font-size: 2.8rem;
+    margin-bottom: 1.5rem;
+    color: #00ffff;
+    user-select: none;
+  }
+  .top-song {
+    background: #111;
+    margin-bottom: 1rem;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 0 10px #00ffff88;
+    font-size: 2rem;
+    user-select: none;
+  }
+  .top-song strong {
+    font-size: 2.4rem;
+    color: #00ffff;
+  }
+  .top-song em {
+    font-style: normal;
+    color: #ccc;
+  }
+
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+</style>
 </head>
 <body>
-  <h1>🎶 Eure Musikwünsche 🎶</h1>
-  <div id="wunschListe">Wird geladen…</div>
 
-  <script>
-    async function ladeWuensche() {
-      const sheetId = "1fDn-x08SRqSKojZMaQui3-8-Uxs6MoaG3dgTTMtjdJs";
-      const sheetName = "Formularantworten 1";
-      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+  <div id="main">
+    <h1>🎶 Eure Musikwünsche 🎶</h1>
+    <div id="wunschListe">Wird geladen…</div>
+  </div>
 
-      try {
-        const res = await fetch(url);
-        const text = await res.text();
-        const json = JSON.parse(text.substring(47).slice(0, -2));
-        const rows = json.table.rows;
+  <aside id="sidebar">
+    <h2>Top 3 Wünsche</h2>
+    <div id="top3">Wird geladen…</div>
+  </aside>
 
-        const container = document.getElementById("wunschListe");
-        container.innerHTML = "";
+<script>
+  const sheetId = "1fDn-x08SRqSKojZMaQui3-8-Uxs6MoaG3dgTTMtjdJs";
+  const sheetName = "Formularantworten 1";
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
 
-        // Nur die letzten 8 Wünsche anzeigen (kannst du anpassen)
-        const maxSongs = 8;
-        const toShow = rows.slice(-maxSongs).reverse();
+  // Ausgespielte Songs in LocalStorage speichern (Key)
+  const STORAGE_KEY = "gespielteSongs";
 
-        toShow.forEach((row, i) => {
-          const zeit = row.c[0]?.f || "";
-          const titel = row.c[3]?.v || "🎵 unbekannter Titel";
-          const kuenstler = row.c[4]?.v || "👤 unbekannter Künstler";
-
-          const div = document.createElement("div");
-          div.className = "song";
-          // Verzögerung der Animation, damit sie nacheinander einblenden
-          div.style.animationDelay = `${i * 0.3}s`;
-          div.innerHTML = `
-            <strong>${titel}</strong>
-            <em>${kuenstler}</em>
-            <small>${zeit}</small>
-          `;
-          container.appendChild(div);
-        });
-      } catch (err) {
-        const container = document.getElementById("wunschListe");
-        container.innerHTML = "Fehler beim Laden.";
-        console.error("Fehler beim Laden der Tabelle:", err);
-      }
+  // Hole Array der gespeicherten IDs (Index der Zeile)
+  function holeGespielteSongs() {
+    const json = localStorage.getItem(STORAGE_KEY);
+    if (!json) return [];
+    try {
+      return JSON.parse(json);
+    } catch {
+      return [];
     }
+  }
+  function speichereGespielteSongs(arr) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  }
 
+  // Markiere einen Song als gespielt (Index der Zeile)
+  function markiereGespielt(index) {
+    const gespielt = holeGespielteSongs();
+    if (!gespielt.includes(index)) {
+      gespielt.push(index);
+      speichereGespielteSongs(gespielt);
+    }
     ladeWuensche();
-    setInterval(ladeWuensche, 10000); // alle 10 Sekunden aktualisieren
-  </script>
+  }
+
+  // Hilfsfunktion für FadeIn Verzögerung
+  function erstelleSongElement(row, index, animationDelay) {
+    const zeit = row.c[0]?.f || "";
+    const titel = row.c[3]?.v || "🎵 unbekannter Titel";
+    const kuenstler = row.c[4]?.v || "👤 unbekannter Künstler";
+
+    const div = document.createElement("div");
+    div.className = "song";
+    div.style.animationDelay = animationDelay + "s";
+    div.setAttribute("data-index", index);
+
+    div.innerHTML = `
+      <strong>${titel}</strong>
+      <em>${kuenstler}</em>
+      <small>${zeit}</small>
+      <button class="btn-remove" title="Als gespielt markieren">&times;</button>
+    `;
+
+    // Klick auf X
+    div.querySelector(".btn-remove").addEventListener("click", (e) => {
+      e.stopPropagation();
+      markiereGespielt(index);
+    });
+
+    return div;
+  }
+
+  // Erzeuge Top 3 Liste nach Anzahl Stimmen (Zählung nach Titel + Interpret)
+  function ermittleTop3(rows, gespieltArr) {
+    // Zähle nur Songs, die NICHT gespielt sind
+    const counts = {};
+    rows.forEach((row, idx) => {
+      if (gespieltArr.includes(idx)) return; // ignorieren
+      const titel = row.c[3]?.v || "";
+      const kuenstler = row.c[4]?.v || "";
+      if (!titel) return;
+      const key = `${titel}###${kuenstler}`;
+      counts[key] = (counts[key] || 0) + 1;
+    });
+
+    // Sortieren nach Anzahl absteigend
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+    // Die Top 3 zurückgeben
+    return sorted.slice(0,3).map(([key, count]) => {
+      const [titel, kuenstler] = key.split("###");
+      return { titel, kuenstler, count };
+    });
+  }
+
+  // Render Top 3 Sidebar
+  function renderTop3(top3) {
+    const container = document.getElementById("top3");
+    container.innerHTML = "";
+    if (top3.length === 0) {
+      container.innerHTML = "<p>Keine Wünsche vorhanden.</p>";
+      return;
+    }
+    top3.forEach(({titel, kuenstler, count}) => {
+      const div = document.createElement("div");
+      div.className = "top-song";
+      div.innerHTML = `
+        <strong>${titel}</strong><br>
+        <em>${kuenstler}</em><br>
+        <small>Stimmen: ${count}</small>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  // Automatisches sanftes Scrollen der Wunschliste
+  function startScroll(container) {
+    const scrollStep = 1; // px pro Intervall
+    const intervalMs = 50; // ms Intervall
+    let scrollPos = 0;
+    let direction = 1; // 1 = runter, -1 = hoch
+
+    if (container._scrollInterval) clearInterval(container._scrollInterval);
+
+    container._scrollInterval = setInterval(() => {
+      if (!container) return;
+      scrollPos += direction * scrollStep;
+      if (scrollPos >= container.scrollHeight - container.clientHeight) {
+        direction = -1;
+      } else if (scrollPos <= 0) {
+        direction = 1;
+      }
+      container.scrollTop = scrollPos;
+    }, intervalMs);
+  }
+
+  async function ladeWuensche() {
+    try {
+      const res = await fetch(url);
+      const text = await res.text();
+      const json = JSON.parse(text.substring(47).slice(0, -2));
+      const rows = json.table.rows;
+
+      const container = document.getElementById("wunschListe");
+      container.innerHTML = "";
+
+      const gespielt = holeGespielteSongs();
+
+      // Wünsche anzeigen, nur wenn nicht gespielt
+      rows.slice().reverse().forEach((row, idx) => {
+        const indexImOriginal = rows.length - 1 - idx;
+        if (gespielt.includes(indexImOriginal)) return; // ausblenden
+
+        // Animation-Verzögerung (für schönen FadeIn-Effekt)
+        const animationDelay = idx * 0.15;
+
+        const songEl = erstelleSongElement(row, indexImOriginal, animationDelay);
+        container.appendChild(songEl);
+      });
+
+      // Top 3 rendern
+      const top3 = ermittleTop3(rows, gespielt);
+      renderTop3(top3);
+
+      // Scroll starten (erst nachdem Inhalte drin sind)
+      startScroll(container);
+    } catch(err) {
+      const container = document.getElementById("wunschListe");
+      container.innerHTML = "Fehler beim Laden.";
+      console.error("Fehler beim Laden der Tabelle:", err);
+    }
+  }
+
+  // Erst laden und dann alle 30s aktualisieren
+  ladeWuensche();
+  setInterval(ladeWuensche, 30000);
+</script>
+
 </body>
 </html>
