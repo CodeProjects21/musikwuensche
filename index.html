@@ -17,6 +17,7 @@
     flex-direction: row;
     height: 100vh;
     padding: 2rem;
+    position: relative;
   }
   h1 {
     font-size: 3rem;
@@ -140,6 +141,54 @@
   @keyframes fadeIn {
     to { opacity: 1; }
   }
+
+  /* Infobanner oben */
+  #infoBanner {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #00ffffdd;
+    color: #000;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 0 15px #00ffffaa;
+    font-size: 2rem;
+    min-width: 300px;
+    max-width: 600px;
+    text-align: center;
+    z-index: 1000;
+    display: none; /* nur sichtbar wenn infos da sind */
+  }
+  #infoBanner strong {
+    display: block;
+    font-size: 2.4rem;
+    margin-bottom: 0.3rem;
+  }
+
+  /* QR-Code rechts unten */
+  #qrCodeContainer {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    background: #000a;
+    padding: 1rem;
+    border-radius: 16px;
+    box-shadow: 0 0 10px #00ffffaa;
+    user-select: none;
+  }
+  #qrCodeContainer img {
+    width: 120px;
+    height: 120px;
+    display: block;
+  }
+  #qrCodeContainer p {
+    margin: 0;
+    margin-top: 0.5rem;
+    color: #00ffff;
+    font-size: 1.4rem;
+    text-align: center;
+  }
 </style>
 </head>
 <body>
@@ -154,15 +203,24 @@
     <div id="top3">Wird geladen…</div>
   </aside>
 
+  <!-- Infobanner -->
+  <div id="infoBanner"><strong></strong><span></span></div>
+
+  <!-- QR-Code unten rechts -->
+  <div id="qrCodeContainer" title="Zum Voting-Formular">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://dein-voting-formular-link.de" alt="QR-Code zum Voting" />
+    <p>Hier voten!</p>
+  </div>
+
 <script>
   const sheetId = "1fDn-x08SRqSKojZMaQui3-8-Uxs6MoaG3dgTTMtjdJs";
   const sheetName = "Formularantworten 1";
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
 
-  // Ausgespielte Songs in LocalStorage speichern (Key)
+  const infosUrl = "infos.txt"; // Pfad zur Textdatei mit Infos
+
   const STORAGE_KEY = "gespielteSongs";
 
-  // Hole Array der gespeicherten IDs (Index der Zeile)
   function holeGespielteSongs() {
     const json = localStorage.getItem(STORAGE_KEY);
     if (!json) return [];
@@ -175,8 +233,6 @@
   function speichereGespielteSongs(arr) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
   }
-
-  // Markiere einen Song als gespielt (Index der Zeile)
   function markiereGespielt(index) {
     const gespielt = holeGespielteSongs();
     if (!gespielt.includes(index)) {
@@ -186,7 +242,6 @@
     ladeWuensche();
   }
 
-  // Hilfsfunktion für FadeIn Verzögerung
   function erstelleSongElement(row, index, animationDelay) {
     const zeit = row.c[0]?.f || "";
     const titel = row.c[3]?.v || "🎵 unbekannter Titel";
@@ -204,7 +259,6 @@
       <button class="btn-remove" title="Als gespielt markieren">&times;</button>
     `;
 
-    // Klick auf X
     div.querySelector(".btn-remove").addEventListener("click", (e) => {
       e.stopPropagation();
       markiereGespielt(index);
@@ -213,30 +267,23 @@
     return div;
   }
 
-  // Erzeuge Top 3 Liste nach Anzahl Stimmen (Zählung nach Titel + Interpret)
   function ermittleTop3(rows, gespieltArr) {
-    // Zähle nur Songs, die NICHT gespielt sind
     const counts = {};
     rows.forEach((row, idx) => {
-      if (gespieltArr.includes(idx)) return; // ignorieren
+      if (gespieltArr.includes(idx)) return;
       const titel = row.c[3]?.v || "";
       const kuenstler = row.c[4]?.v || "";
       if (!titel) return;
       const key = `${titel}###${kuenstler}`;
       counts[key] = (counts[key] || 0) + 1;
     });
-
-    // Sortieren nach Anzahl absteigend
     const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-
-    // Die Top 3 zurückgeben
     return sorted.slice(0,3).map(([key, count]) => {
       const [titel, kuenstler] = key.split("###");
       return { titel, kuenstler, count };
     });
   }
 
-  // Render Top 3 Sidebar
   function renderTop3(top3) {
     const container = document.getElementById("top3");
     container.innerHTML = "";
@@ -247,39 +294,80 @@
     top3.forEach(({titel, kuenstler, count}) => {
       const div = document.createElement("div");
       div.className = "top-song";
-      div.innerHTML = `
-        <strong>${titel}</strong><br>
-        <em>${kuenstler}</em><br>
-        <small>Stimmen: ${count}</small>
-      `;
+      div.innerHTML = `<strong>${titel}</strong><br><em>${kuenstler}</em><br><small>Stimmen: ${count}</small>`;
       container.appendChild(div);
     });
   }
 
-  // Automatisches sanftes Scrollen der Wunschliste
+  // Scrollen in Wunschliste
+  let scrollInterval;
   function startScroll(container) {
-    const scrollStep = 1; // px pro Intervall
-    const intervalMs = 50; // ms Intervall
-    let scrollPos = 0;
-    let direction = 1; // 1 = runter, -1 = hoch
+    clearInterval(scrollInterval);
+    if (container.scrollHeight <= container.clientHeight) return; // Kein Scroll nötig
 
-    if (container._scrollInterval) clearInterval(container._scrollInterval);
-
-    container._scrollInterval = setInterval(() => {
-      if (!container) return;
-      scrollPos += direction * scrollStep;
-      if (scrollPos >= container.scrollHeight - container.clientHeight) {
-        direction = -1;
-      } else if (scrollPos <= 0) {
-        direction = 1;
-      }
-      container.scrollTop = scrollPos;
-    }, intervalMs);
+    let pos = 0;
+    let dir = 1;
+    scrollInterval = setInterval(() => {
+      pos += dir;
+      container.scrollTop = pos;
+      if (pos + container.clientHeight >= container.scrollHeight) dir = -1;
+      else if (pos <= 0) dir = 1;
+    }, 50);
   }
 
+  // --- Infobanner Logik ---
+
+  let infos = [];
+  let currentInfoIndex = 0;
+  let infoTimeout;
+
+  async function ladeInfos() {
+    try {
+      const res = await fetch(infosUrl + "?_=" + Date.now());
+      if (!res.ok) throw new Error("Keine Infos");
+
+      const text = await res.text();
+      const lines = text.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+
+      infos = lines.map(line => {
+        const [titel, nachricht] = line.split(",", 2);
+        return { titel: titel || "", nachricht: nachricht || "" };
+      }).filter(info => info.titel && info.nachricht);
+
+      if (infos.length > 0) {
+        zeigeInfo(infos[0]);
+        if (infos.length > 1) {
+          clearTimeout(infoTimeout);
+          infoTimeout = setInterval(() => {
+            currentInfoIndex = (currentInfoIndex + 1) % infos.length;
+            zeigeInfo(infos[currentInfoIndex]);
+          }, 30000); // alle 30s wechseln
+        }
+      } else {
+        verbergeInfo();
+      }
+    } catch (err) {
+      verbergeInfo();
+      console.warn("Info-Banner konnte nicht geladen werden:", err);
+    }
+  }
+
+  function zeigeInfo(info) {
+    const banner = document.getElementById("infoBanner");
+    banner.querySelector("strong").textContent = info.titel;
+    banner.querySelector("span").textContent = info.nachricht;
+    banner.style.display = "block";
+  }
+  function verbergeInfo() {
+    const banner = document.getElementById("infoBanner");
+    banner.style.display = "none";
+    clearInterval(infoTimeout);
+  }
+
+  // Hauptfunktion zum Laden aller Daten
   async function ladeWuensche() {
     try {
-      const res = await fetch(url);
+      const res = await fetch(url + "&_=" + Date.now());
       const text = await res.text();
       const json = JSON.parse(text.substring(47).slice(0, -2));
       const rows = json.table.rows;
@@ -292,32 +380,30 @@
       // Wünsche anzeigen, nur wenn nicht gespielt
       rows.slice().reverse().forEach((row, idx) => {
         const indexImOriginal = rows.length - 1 - idx;
-        if (gespielt.includes(indexImOriginal)) return; // ausblenden
+        if (gespielt.includes(indexImOriginal)) return;
 
-        // Animation-Verzögerung (für schönen FadeIn-Effekt)
         const animationDelay = idx * 0.15;
-
         const songEl = erstelleSongElement(row, indexImOriginal, animationDelay);
         container.appendChild(songEl);
       });
 
-      // Top 3 rendern
       const top3 = ermittleTop3(rows, gespielt);
       renderTop3(top3);
 
-      // Scroll starten (erst nachdem Inhalte drin sind)
       startScroll(container);
-    } catch(err) {
+
+      // Neue Infos laden
+      ladeInfos();
+    } catch (err) {
       const container = document.getElementById("wunschListe");
       container.innerHTML = "Fehler beim Laden.";
       console.error("Fehler beim Laden der Tabelle:", err);
     }
   }
 
-  // Erst laden und dann alle 30s aktualisieren
   ladeWuensche();
   setInterval(ladeWuensche, 30000);
-</script>
 
+</script>
 </body>
 </html>
