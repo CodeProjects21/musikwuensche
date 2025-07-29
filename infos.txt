@@ -1,1 +1,1 @@
-Test,Test erfolgreich
+QR-Code, Scanne den QR-Code unten rechts, um eure Lieblingssong zu voten!
