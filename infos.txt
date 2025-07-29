@@ -1,1 +1,4 @@
-QR-Code, Scanne den QR-Code unten rechts, um eure Lieblingssong zu voten!
+QR-Code, Scanne den QR-Code unten rechts um eure Lieblingssong zu voten!
+Ende,Veranstaltung endet um 23:00 Uhr.
+Danke,Wir freuen uns auf einen tollen Abend mit euch.
+Pause, bald gehts weiter!
