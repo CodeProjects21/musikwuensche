@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Live-Musikwünsche</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #000;
+      color: #fff;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+    }
+    .song {
+      background: #222;
+      margin: 1rem 0;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #444;
+      font-size: 1.2rem;
+    }
+    .song strong {
+      font-size: 1.4rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎶 Eure Musikwünsche 🎶</h1>
+  <div id="wunschListe">Wird geladen…</div>
+
+  <script>
+    async function ladeWuensche() {
+      const sheetId = "1fDn-x08SRqSKojZMaQui3-8-Uxs6MoaG3dgTTMtjdJs";
+      const sheetName = "Formularantworten 1"; // Name deines Tabellenblatts
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const json = JSON.parse(text.substring(47).slice(0, -2));
+        const rows = json.table.rows;
+
+        const container = document.getElementById("wunschListe");
+        container.innerHTML = "";
+
+        rows.slice().reverse().forEach(row => {
+          const zeit = row.c[0]?.f || "";             // Zeitstempel (Spalte A)
+          const titel = row.c[3]?.v || "🎵 unbekannter Titel"; // Titel (Spalte D)
+          const kuenstler = row.c[4]?.v || "👤 unbekannter Künstler"; // Interpret (Spalte E)
+
+          const div = document.createElement("div");
+          div.className = "song";
+          div.innerHTML = `
+            <strong>${titel}</strong><br>
+            <em>${kuenstler}</em><br>
+            <small>${zeit}</small>
+          `;
+          container.appendChild(div);
+        });
+      } catch (err) {
+        document.getElementById("wunschListe").innerHTML = "Fehler beim Laden.";
+        console.error("Fehler beim Laden der Tabelle:", err);
+      }
+    }
+
+    ladeWuensche();
+    setInterval(ladeWuensche, 10000); // alle 10 Sekunden aktualisieren
+  </script>
+</body>
+</html>
