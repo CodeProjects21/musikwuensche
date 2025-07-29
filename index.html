@@ -158,7 +158,7 @@
     max-width: 600px;
     text-align: center;
     z-index: 1000;
-    display: none; /* nur sichtbar wenn infos da sind */
+    display: none;
   }
   #infoBanner strong {
     display: block;
@@ -217,7 +217,7 @@
   const sheetName = "Formularantworten 1";
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
 
-  const infosUrl = "infos.txt"; // Pfad zur Textdatei mit Infos
+  const infosUrl = "infos.txt";
 
   const STORAGE_KEY = "gespielteSongs";
 
@@ -277,7 +277,6 @@
       counts[key] = (counts[key] || 0) + 1;
     });
 
-    // sortiere nach Anzahl
     const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
     return sorted.map(([key, count]) => {
       const [titel, kuenstler] = key.split("||");
@@ -297,7 +296,7 @@
     }
   }
 
-  // Infobanner-Rotation
+  // *** Angepasste Infobanner-Funktion mit 5s pro Info und reload ***
   async function starteInfoBanner() {
     const infos = await ladeInfos();
     const banner = document.getElementById("infoBanner");
@@ -309,18 +308,20 @@
     banner.style.display = "block";
     let currentIndex = 0;
 
-    // Zeige alle Infos in Summe 30 Sekunden, je gleichmäßig verteilt
-    const intervalMs = Math.floor(30000 / infos.length);
-
     banner.querySelector("strong").textContent = infos[currentIndex];
-    banner.querySelector("span").textContent = ""; // leer für jetzt
+    banner.querySelector("span").textContent = "";
 
     if (window.infoInterval) clearInterval(window.infoInterval);
 
     window.infoInterval = setInterval(() => {
-      currentIndex = (currentIndex + 1) % infos.length;
+      currentIndex++;
+      if (currentIndex >= infos.length) {
+        clearInterval(window.infoInterval);
+        location.reload();
+        return;
+      }
       banner.querySelector("strong").textContent = infos[currentIndex];
-    }, intervalMs);
+    }, 5000);
   }
 
   async function ladeWuensche() {
@@ -330,17 +331,13 @@
     try {
       const res = await fetch(url);
       const text = await res.text();
-      // JSON aus Google Sheets rausfiltern
       const jsonStr = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/)[1];
       const data = JSON.parse(jsonStr);
 
       const rows = data.table.rows;
       const gespielt = holeGespielteSongs();
 
-      // Filter: nur Songs die noch nicht gespielt sind
       const ungefilterteSongs = rows.filter((_, idx) => !gespielt.includes(idx));
-
-      // Songs limitieren auf max 5 (aktueller Bereich)
       const songs = ungefilterteSongs.slice(0, 5);
 
       if (songs.length === 0) {
@@ -348,13 +345,14 @@
       } else {
         wunschListe.innerHTML = "";
         songs.forEach((row, i) => {
-          const delay = i * 0.3; // für sanfte FadeIn Animation
-          const el = erstelleSongElement(row, rows.indexOf(row), delay);
+          // Index im Originalrows finden:
+          const originalIndex = rows.indexOf(row);
+          const delay = i * 0.3;
+          const el = erstelleSongElement(row, originalIndex, delay);
           wunschListe.appendChild(el);
         });
       }
 
-      // Sidebar Top3 aktualisieren
       const top3Container = document.getElementById("top3");
       const top3 = ermittleTop3(rows, gespielt);
 
@@ -371,22 +369,17 @@
       }
 
     } catch (e) {
-      wunschListe.innerHTML = "<em>Fehler beim Laden der Wünsche.</em>";
+      wunschListe.innerHTML = `<em>Fehler beim Laden der Wünsche.</em>`;
       console.error(e);
     }
   }
 
-  // Beim Laden starten
-  window.addEventListener("load", () => {
-    ladeWuensche();
-    starteInfoBanner();
+  // Initialisierung:
+  ladeWuensche();
+  starteInfoBanner();
 
-    // Alle 60 Sekunden Wünsche neu laden
-    setInterval(ladeWuensche, 60000);
-    // Alle 60 Sekunden Infos neu laden und Banner neustarten
-    setInterval(starteInfoBanner, 60000);
-  });
-
+  // Optional: Wünsche alle 60 Sekunden neu laden
+  setInterval(ladeWuensche, 60000);
 </script>
 
 </body>
