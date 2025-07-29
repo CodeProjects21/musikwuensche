@@ -1,3 +1,4 @@
 Ende,Veranstaltung endet um 23:00 Uhr.
 Danke,Wir freuen uns auf einen tollen Abend mit euch.
-Pause, bald gehts weiter!
+Pause,bald gehts weiter!
+Test,Test
